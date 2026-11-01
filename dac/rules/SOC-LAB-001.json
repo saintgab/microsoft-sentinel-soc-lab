@@ -5,7 +5,7 @@
   "properties": {
     "displayName": "SOC-LAB-001 - High Impact Azure Resource Deletion",
     "description": "Monitors successful deletion of selected high-impact Azure resources.",
-    "severity": "Critical",
+    "severity": "Medium",
     "enabled": false,
     "query": "// SOC-LAB-001: High Impact Azure Resource Deletion\n// Status: Live alert and incident validated\n// Data source: AzureActivity\n// Severity: Medium\n// Test: Authorized deletion of an unassociated lab NSG\n\nAzureActivity\n| where TimeGenerated > ago(2h)\n| where OperationNameValue in~ (\n    \"MICROSOFT.COMPUTE/VIRTUALMACHINES/DELETE\",\n    \"MICROSOFT.STORAGE/STORAGEACCOUNTS/DELETE\",\n    \"MICROSOFT.NETWORK/NETWORKSECURITYGROUPS/DELETE\",\n    \"MICROSOFT.KEYVAULT/VAULTS/DELETE\"\n)\n| where ActivityStatusValue in~ (\"Success\", \"Succeeded\")\n| project\n    TimeGenerated,\n    Caller,\n    CallerIpAddress,\n    OperationNameValue,\n    ResourceId,\n    ResourceGroup,\n    ActivityStatusValue,\n    CorrelationId\n| order by TimeGenerated desc\n",
     "queryFrequency": "PT2H",
