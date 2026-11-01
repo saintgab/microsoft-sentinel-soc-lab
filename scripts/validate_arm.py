@@ -38,6 +38,13 @@ for rule in RULES:
         assert resource["type"] == "Microsoft.SecurityInsights/alertRules"
         assert resource["apiVersion"] == "2022-11-01"
         assert resource["kind"] == "Scheduled"
+        expected_scope = (
+            "[format('Microsoft.OperationalInsights/workspaces/{0}', "
+            "parameters('workspaceName'))]"
+        )
+        assert resource.get("scope") == expected_scope, (
+            "Unexpected Sentinel workspace scope"
+        )
         assert resource["name"] == "[parameters('ruleId')]"
         assert arm["parameters"]["workspaceName"]["type"] == "string"
 
@@ -48,6 +55,26 @@ for rule in RULES:
         ids.add(rule_id)
 
         assert props["enabled"] is False, "Rule must be disabled"
+        assert props["eventGroupingSettings"] == {
+            "aggregationKind": "AlertPerResult"
+        }, "Unexpected event grouping"
+
+        grouping = props["incidentConfiguration"]["groupingConfiguration"]
+
+        assert grouping == {
+            "enabled": False,
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": [],
+            "groupByEntities": [],
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "reopenClosedIncident": False,
+        }, "Unexpected incident grouping configuration"
+
+        if rule == "SOC-LAB-001":
+            assert props.get("customDetails") == {}, (
+                "Unexpected custom details"
+            )
         assert props["incidentConfiguration"]["createIncident"] is False, (
             "Incident creation must be disabled"
         )
@@ -59,7 +86,7 @@ for rule in RULES:
                 )
 
         allowed = set(FIELDS) | {
-            "enabled", "incidentConfiguration"
+            "enabled", "incidentConfiguration", "eventGroupingSettings", "customDetails"
         }
 
         extra = set(props) - allowed
