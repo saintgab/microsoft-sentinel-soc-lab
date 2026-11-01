@@ -33,3 +33,11 @@ jobs:
 
       - name: Validate Sentinel detections
         run: python scripts/validate_dac.py
+
+      - name: Validate ARM JSON syntax
+        run: |
+          python -m json.tool arm/SOC-LAB-001.json > /dev/null
+          python -m json.tool arm/SOC-LAB-002.json > /dev/null
+
+      - name: Validate ARM security and source consistency
+        run: python scripts/validate_arm.py

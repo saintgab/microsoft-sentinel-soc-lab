@@ -1,0 +1,54 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "workspaceName": {
+      "type": "string",
+      "metadata": {
+        "description": "Existing Sentinel Log Analytics workspace"
+      }
+    },
+    "ruleId": {
+      "type": "string",
+      "defaultValue": "41a9f1f6-784f-5d21-b69f-a466993ac286"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.SecurityInsights/alertRules",
+      "apiVersion": "2022-11-01",
+      "scope": "[format('Microsoft.OperationalInsights/workspaces/{0}', parameters('workspaceName'))]",
+      "name": "[parameters('ruleId')]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "SOC-LAB-002 - Azure RBAC Role Assignment Monitoring",
+        "description": "Monitors successful Azure role assignment writes, regardless of privilege level.",
+        "severity": "Low",
+        "query": "// SOC-LAB-002: Azure RBAC Role Assignment Monitoring\n// Status: Rule created, disabled\n// Data source: AzureActivity\n// Severity: Low\n// Validation: Synthetic KQL testing\n// Scope: Successful role assignments, not privileged roles only\n\nAzureActivity\n| where TimeGenerated > ago(2h)\n| where OperationNameValue =~\n    \"MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE\"\n| where ActivityStatusValue in~ (\"Success\", \"Succeeded\")\n| summarize arg_max(TimeGenerated, *)\n    by CorrelationId, ResourceId, Caller\n| project\n    TimeGenerated,\n    Caller,\n    CallerIpAddress,\n    OperationNameValue,\n    ActivityStatusValue,\n    ResourceId,\n    ResourceGroup,\n    CorrelationId\n| order by TimeGenerated desc\n",
+        "queryFrequency": "PT2H",
+        "queryPeriod": "PT2H",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT1H",
+        "tactics": [],
+        "techniques": [],
+        "entityMappings": [
+          {
+            "entityType": "IP",
+            "fieldMappings": [
+              {
+                "identifier": "Address",
+                "columnName": "CallerIpAddress"
+              }
+            ]
+          }
+        ],
+        "enabled": false,
+        "incidentConfiguration": {
+          "createIncident": false
+        }
+      }
+    }
+  ]
+}
