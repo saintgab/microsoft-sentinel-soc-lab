@@ -110,3 +110,37 @@ The resulting case was investigated and closed as authorized security testing.
 **Validation outcome:** Azure Activity successfully recorded the controlled resource deletion, the scheduled KQL analytics rule generated an alert, and the associated incident was investigated and resolved.
 
 **Note:** Screenshots have been redacted to protect personal identifiers and security-related information.
+
+## Detection-as-Code CI Evidence
+
+This lab includes an automated Detection-as-Code validation pipeline using Python and GitHub Actions.
+
+### Implemented controls
+
+- Version-controlled JSON definitions for SOC-LAB-001 and SOC-LAB-002.
+- Validation of required fields, severity, KQL source consistency, and entity mappings.
+- Disabled-by-default policy for detection definitions.
+- GitHub Actions validation on pushes and pull requests.
+- Protected main branch requiring successful detection validation.
+
+### Security gate validation
+
+An intentionally invalid severity was committed to a test branch. GitHub Actions rejected the rule, and the required status check blocked the pull request from merging.
+
+After restoring the valid severity, the pipeline passed and the merge became available.
+
+**Failed validation and blocked merge:**
+
+![Detection-as-Code security gate blocked](screenshots/dac-validation-blocked.png)
+
+**Successful validation after remediation:**
+
+![Detection-as-Code validation passed](screenshots/dac-validation-passed.png)
+
+### Scope and limitations
+
+These are local Detection-as-Code rule definitions, not yet complete deployable Microsoft Sentinel ARM templates.
+
+The CI pipeline performs offline validation. It does not deploy analytics rules to Azure or verify live Sentinel alert generation.
+
+The original Sentinel detection evidence remains documented separately.
