@@ -1,0 +1,88 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "workspaceName": {
+      "type": "string",
+      "defaultValue": "law-sentinel-soc-lab"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Insights/dataCollectionRules",
+      "apiVersion": "2024-03-11",
+      "name": "dcr-soc-security-events",
+      "location": "eastus",
+      "kind": "Direct",
+      "properties": {
+        "description": "Direct ingestion of synthetic SOC lab events",
+        "streamDeclarations": {
+          "Custom-SOCSecurityEvents": {
+            "columns": [
+              {
+                "name": "TimeGenerated",
+                "type": "datetime"
+              },
+              {
+                "name": "EventType",
+                "type": "string"
+              },
+              {
+                "name": "UserId",
+                "type": "string"
+              },
+              {
+                "name": "SourceIP",
+                "type": "string"
+              },
+              {
+                "name": "Destination",
+                "type": "string"
+              },
+              {
+                "name": "Action",
+                "type": "string"
+              },
+              {
+                "name": "Result",
+                "type": "string"
+              },
+              {
+                "name": "RiskScore",
+                "type": "int"
+              },
+              {
+                "name": "CorrelationId",
+                "type": "string"
+              },
+              {
+                "name": "RawData",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "destinations": {
+          "logAnalytics": [
+            {
+              "name": "socWorkspace",
+              "workspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('workspaceName'))]"
+            }
+          ]
+        },
+        "dataFlows": [
+          {
+            "streams": [
+              "Custom-SOCSecurityEvents"
+            ],
+            "destinations": [
+              "socWorkspace"
+            ],
+            "transformKql": "source",
+            "outputStream": "Custom-SOCSecurityEvents_CL"
+          }
+        ]
+      }
+    }
+  ]
+}
