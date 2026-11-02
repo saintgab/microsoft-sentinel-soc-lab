@@ -36,8 +36,15 @@ jobs:
 
       - name: Validate ARM JSON syntax
         run: |
-          python -m json.tool arm/SOC-LAB-001.json > /dev/null
-          python -m json.tool arm/SOC-LAB-002.json > /dev/null
+          for file in arm/*.json ingestion/dcr-*.json; do
+            python -m json.tool "$file" > /dev/null
+          done
+
+      - name: Check ingestion Python syntax
+        run: python -m py_compile ingestion/scripts/send_test_events.py
+
+      - name: Validate ingestion configuration and regression fixture
+        run: python scripts/validate_ingestion.py
 
       - name: Validate ARM security and source consistency
         run: python scripts/validate_arm.py
