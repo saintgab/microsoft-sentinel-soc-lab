@@ -6,7 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 ERRORS = []
 
-RULES = ["SOC-LAB-001", "SOC-LAB-002"]
+RULES = ["SOC-LAB-001", "SOC-LAB-002", "SOC-LAB-003"]
 
 FIELDS = [
     "displayName", "description", "severity",

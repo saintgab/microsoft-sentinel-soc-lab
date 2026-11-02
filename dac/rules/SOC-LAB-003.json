@@ -1,0 +1,40 @@
+{
+  "id": "SOC-LAB-003",
+  "kind": "Scheduled",
+  "sourceFile": "detections/SOC-LAB-003-multistage-account-activity.kql",
+  "properties": {
+    "displayName": "SOC-LAB-003 - Multi-Stage Suspicious Account Activity",
+    "description": "Lab detection correlating failed authentication, successful login, privilege change, sensitive file access, and data transfer in chronological order within 30 minutes.",
+    "severity": "Medium",
+    "enabled": false,
+    "query": "// SOC-LAB-003: Multi-stage suspicious account activity\n// Lab-only synthetic event correlation.\n// Detects ordered activity within a 30-minute window.\n\nSOCSecurityEvents_CL\n| where TimeGenerated > ago(1h)\n| summarize\n    FailedLoginTime = minif(TimeGenerated, EventType == \"FailedLogin\"),\n    LoginTime = minif(TimeGenerated, EventType == \"SuccessfulLogin\" and Result == \"Success\"),\n    PrivilegeTime = minif(TimeGenerated, EventType == \"PrivilegeChange\" and Result == \"Success\"),\n    FileAccessTime = minif(TimeGenerated, EventType == \"SensitiveFileAccess\" and Result == \"Success\"),\n    TransferTime = minif(TimeGenerated, EventType == \"DataTransfer\" and Result == \"Success\"),\n    EventCount = count(),\n    MaxRiskScore = max(RiskScore)\n    by CorrelationId, UserId, SourceIP\n| where isnotnull(FailedLoginTime)\n    and isnotnull(LoginTime)\n    and isnotnull(PrivilegeTime)\n    and isnotnull(FileAccessTime)\n    and isnotnull(TransferTime)\n| where FailedLoginTime < LoginTime\n    and LoginTime < PrivilegeTime\n    and PrivilegeTime < FileAccessTime\n    and FileAccessTime < TransferTime\n| where TransferTime - FailedLoginTime <= 30m\n| project\n    TimeGenerated = TransferTime,\n    UserId,\n    SourceIP,\n    CorrelationId,\n    FailedLoginTime,\n    LoginTime,\n    PrivilegeTime,\n    FileAccessTime,\n    TransferTime,\n    EventCount,\n    MaxRiskScore\n",
+    "queryFrequency": "PT5M",
+    "queryPeriod": "PT1H",
+    "triggerOperator": "GreaterThan",
+    "triggerThreshold": 0,
+    "suppressionEnabled": false,
+    "suppressionDuration": "PT5H",
+    "tactics": [],
+    "techniques": [],
+    "entityMappings": [
+      {
+        "entityType": "Account",
+        "fieldMappings": [
+          {
+            "identifier": "FullName",
+            "columnName": "UserId"
+          }
+        ]
+      },
+      {
+        "entityType": "IP",
+        "fieldMappings": [
+          {
+            "identifier": "Address",
+            "columnName": "SourceIP"
+          }
+        ]
+      }
+    ]
+  }
+}
