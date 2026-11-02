@@ -1,0 +1,45 @@
+datatable(Scenario:string, OffsetMinutes:int, EventType:string, Result:string)
+[
+    "Positive", 0, "FailedLogin", "Failure",
+    "Positive", 5, "SuccessfulLogin", "Success",
+    "Positive", 10, "PrivilegeChange", "Success",
+    "Positive", 15, "SensitiveFileAccess", "Success",
+    "Positive", 20, "DataTransfer", "Success",
+    "MissingPrivilege", 0, "FailedLogin", "Failure",
+    "MissingPrivilege", 5, "SuccessfulLogin", "Success",
+    "MissingPrivilege", 15, "SensitiveFileAccess", "Success",
+    "MissingPrivilege", 20, "DataTransfer", "Success",
+    "WrongOrder", 0, "FailedLogin", "Failure",
+    "WrongOrder", 5, "SuccessfulLogin", "Success",
+    "WrongOrder", 10, "PrivilegeChange", "Success",
+    "WrongOrder", 15, "DataTransfer", "Success",
+    "WrongOrder", 20, "SensitiveFileAccess", "Success",
+    "TooSlow", 0, "FailedLogin", "Failure",
+    "TooSlow", 10, "SuccessfulLogin", "Success",
+    "TooSlow", 20, "PrivilegeChange", "Success",
+    "TooSlow", 30, "SensitiveFileAccess", "Success",
+    "TooSlow", 40, "DataTransfer", "Success"
+]
+| extend TimeGenerated = now() - 50m + OffsetMinutes * 1m
+| summarize
+    FailedLoginTime = minif(TimeGenerated, EventType == "FailedLogin"),
+    LoginTime = minif(TimeGenerated, EventType == "SuccessfulLogin" and Result == "Success"),
+    PrivilegeTime = minif(TimeGenerated, EventType == "PrivilegeChange" and Result == "Success"),
+    FileAccessTime = minif(TimeGenerated, EventType == "SensitiveFileAccess" and Result == "Success"),
+    TransferTime = minif(TimeGenerated, EventType == "DataTransfer" and Result == "Success")
+    by Scenario
+| extend ActualMatch =
+    isnotnull(FailedLoginTime)
+    and isnotnull(LoginTime)
+    and isnotnull(PrivilegeTime)
+    and isnotnull(FileAccessTime)
+    and isnotnull(TransferTime)
+    and FailedLoginTime < LoginTime
+    and LoginTime < PrivilegeTime
+    and PrivilegeTime < FileAccessTime
+    and FileAccessTime < TransferTime
+    and TransferTime - FailedLoginTime <= 30m
+| extend ExpectedMatch = Scenario == "Positive"
+| extend TestResult = iff(ActualMatch == ExpectedMatch, "PASS", "FAIL")
+| project Scenario, ExpectedMatch, ActualMatch, TestResult
+| order by Scenario asc
