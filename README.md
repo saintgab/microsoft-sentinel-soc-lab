@@ -173,3 +173,28 @@ Three read-only hunting queries operate on SOCSecurityEvents_CL:
 
 All three hunts executed successfully against Azure Log Analytics.
 Six matching rows were returned; none is a confirmed incident.
+
+## Threat Hunting and Detection Engineering — Evidence Gallery
+
+Evidence from Azure Log Analytics and GitHub Actions.
+Matching events are lab investigation candidates, not confirmed attacks.
+
+### HUNT-001 — Suspicious Authentication
+
+![HUNT-001 — Suspicious Authentication](screenshots/threat-hunting/HUNT-001-authentication.png)
+
+### HUNT-002 — Potential Data Exfiltration
+
+![HUNT-002 — Potential Data Exfiltration](screenshots/threat-hunting/HUNT-002-data-transfer.png)
+
+### HUNT-003 — Privilege Change Investigation
+
+![HUNT-003 — Privilege Change Investigation](screenshots/threat-hunting/HUNT-003-privilege-changes.png)
+
+### SOC-LAB-003 — Session-Aware Validation
+
+![SOC-LAB-003 — Session-Aware Validation](screenshots/detection-validation/SOC-LAB-003-session-aware-validation.png)
+
+### GitHub Actions — Automated KQL Regression
+
+![GitHub Actions — Automated KQL Regression](screenshots/ci/github-actions-success.png)
