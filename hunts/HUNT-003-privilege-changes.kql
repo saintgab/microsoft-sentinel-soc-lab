@@ -1,0 +1,13 @@
+SOCSecurityEvents_CL
+| where TimeGenerated > ago(30d)
+| where EventType == "PrivilegeChange"
+| summarize
+    ChangeCount = count(),
+    FirstObserved = min(TimeGenerated),
+    LastObserved = max(TimeGenerated),
+    CorrelationIds = make_set(CorrelationId, 20),
+    HighestRisk = max(RiskScore)
+    by UserId, SourceIP, Window = bin(TimeGenerated, 1h)
+| project FirstObserved, LastObserved, UserId, SourceIP,
+          ChangeCount, HighestRisk, CorrelationIds
+| order by ChangeCount desc, LastObserved desc

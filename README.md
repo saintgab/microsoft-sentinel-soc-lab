@@ -157,3 +157,19 @@ KQL regression workflow covering nine synthetic scenarios.
 
 The custom analytics rules remain disabled.
 The session-aware candidate has not been deployed.
+
+## Threat Hunting and MITRE ATT&CK — v1.1
+
+Three read-only hunting queries operate on SOCSecurityEvents_CL:
+
+- [HUNT-001: Authentication](hunts/HUNT-001-authentication.kql)
+- [HUNT-002: Data Transfer](hunts/HUNT-002-data-transfer.kql)
+- [HUNT-003: Privilege Changes](hunts/HUNT-003-privilege-changes.kql)
+
+### Evidence and investigation
+- [Hunting playbook](docs/threat-hunting-playbook.md)
+- [MITRE ATT&CK coverage](docs/mitre-attack-coverage.md)
+- [Azure execution results](docs/threat-hunting-results.md)
+
+All three hunts executed successfully against Azure Log Analytics.
+Six matching rows were returned; none is a confirmed incident.
