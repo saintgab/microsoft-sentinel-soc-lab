@@ -1,11 +1,6 @@
-// SOC-LAB-001: High Impact Azure Resource Deletion
-// Status: Live alert and incident validated
-// Data source: AzureActivity
-// Severity: Medium
-// Test: Authorized deletion of an unassociated lab NSG
 
 AzureActivity
-| where TimeGenerated > ago(2h)
+| where TimeGenerated > ago(1h)
 | where OperationNameValue in~ (
     "MICROSOFT.COMPUTE/VIRTUALMACHINES/DELETE",
     "MICROSOFT.STORAGE/STORAGEACCOUNTS/DELETE",
@@ -22,4 +17,3 @@ AzureActivity
     ResourceGroup,
     ActivityStatusValue,
     CorrelationId
-| order by TimeGenerated desc

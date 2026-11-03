@@ -1,0 +1,87 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "workspaceName": {
+      "type": "string",
+      "metadata": {
+        "description": "Existing Sentinel Log Analytics workspace"
+      }
+    },
+    "ruleId": {
+      "type": "string",
+      "defaultValue": "72d5d6cb-eb47-49c9-9105-335b61eace69"
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.SecurityInsights/alertRules",
+      "apiVersion": "2022-11-01",
+      "scope": "[format('Microsoft.OperationalInsights/workspaces/{0}', parameters('workspaceName'))]",
+      "name": "[parameters('ruleId')]",
+      "kind": "Scheduled",
+      "properties": {
+        "displayName": "SOC-LAB-001 - High Impact Azure Resource Deletion",
+        "description": "Detects successful deletion of high-impact Azure resources for security investigation.",
+        "severity": "Medium",
+        "query": "\nAzureActivity\n| where TimeGenerated > ago(1h)\n| where OperationNameValue in~ (\n    \"MICROSOFT.COMPUTE/VIRTUALMACHINES/DELETE\",\n    \"MICROSOFT.STORAGE/STORAGEACCOUNTS/DELETE\",\n    \"MICROSOFT.NETWORK/NETWORKSECURITYGROUPS/DELETE\",\n    \"MICROSOFT.KEYVAULT/VAULTS/DELETE\"\n)\n| where ActivityStatusValue in~ (\"Success\", \"Succeeded\")\n| project\n    TimeGenerated,\n    Caller,\n    CallerIpAddress,\n    OperationNameValue,\n    ResourceId,\n    ResourceGroup,\n    ActivityStatusValue,\n    CorrelationId\n",
+        "queryFrequency": "PT5M",
+        "queryPeriod": "PT2H",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "suppressionEnabled": false,
+        "suppressionDuration": "PT5H",
+        "tactics": [
+          "Impact"
+        ],
+        "techniques": [],
+        "entityMappings": [
+          {
+            "entityType": "Account",
+            "fieldMappings": [
+              {
+                "identifier": "FullName",
+                "columnName": "Caller"
+              }
+            ]
+          },
+          {
+            "entityType": "IP",
+            "fieldMappings": [
+              {
+                "identifier": "Address",
+                "columnName": "CallerIpAddress"
+              }
+            ]
+          },
+          {
+            "entityType": "AzureResource",
+            "fieldMappings": [
+              {
+                "identifier": "ResourceId",
+                "columnName": "ResourceId"
+              }
+            ]
+          }
+        ],
+        "enabled": false,
+        "incidentConfiguration": {
+          "createIncident": false,
+          "groupingConfiguration": {
+            "enabled": false,
+            "groupByAlertDetails": [],
+            "groupByCustomDetails": [],
+            "groupByEntities": [],
+            "lookbackDuration": "PT5H",
+            "matchingMethod": "AllEntities",
+            "reopenClosedIncident": false
+          }
+        },
+        "eventGroupingSettings": {
+          "aggregationKind": "AlertPerResult"
+        },
+        "customDetails": {}
+      }
+    }
+  ]
+}

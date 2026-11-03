@@ -1,17 +1,9 @@
-// SOC-LAB-002: Azure RBAC Role Assignment Monitoring
-// Status: Rule created, disabled
-// Data source: AzureActivity
-// Severity: Low
-// Validation: Synthetic KQL testing
-// Scope: Successful role assignments, not privileged roles only
 
 AzureActivity
 | where TimeGenerated > ago(2h)
-| where OperationNameValue =~
-    "MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE"
+| where OperationNameValue =~ "MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE"
 | where ActivityStatusValue in~ ("Success", "Succeeded")
-| summarize arg_max(TimeGenerated, *)
-    by CorrelationId, ResourceId, Caller
+| summarize arg_max(TimeGenerated, *) by CorrelationId, ResourceId, Caller
 | project
     TimeGenerated,
     Caller,

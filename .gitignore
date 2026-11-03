@@ -1,1 +1,9 @@
 .DS_Store
+
+# Python generated files
+__pycache__/
+*.pyc
+
+# Local Azure configuration
+.env
+.env.*

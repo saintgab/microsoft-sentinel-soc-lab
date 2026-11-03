@@ -4,25 +4,43 @@
   "sourceFile": "detections/SOC-LAB-002-rbac-monitoring.kql",
   "properties": {
     "displayName": "SOC-LAB-002 - Azure RBAC Role Assignment Monitoring",
-    "description": "Monitors successful Azure role assignment writes, regardless of privilege level.",
+    "description": "Monitors successful Azure RBAC role-assignment changes for security review and investigation.",
     "severity": "Low",
     "enabled": false,
-    "query": "// SOC-LAB-002: Azure RBAC Role Assignment Monitoring\n// Status: Rule created, disabled\n// Data source: AzureActivity\n// Severity: Low\n// Validation: Synthetic KQL testing\n// Scope: Successful role assignments, not privileged roles only\n\nAzureActivity\n| where TimeGenerated > ago(2h)\n| where OperationNameValue =~\n    \"MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE\"\n| where ActivityStatusValue in~ (\"Success\", \"Succeeded\")\n| summarize arg_max(TimeGenerated, *)\n    by CorrelationId, ResourceId, Caller\n| project\n    TimeGenerated,\n    Caller,\n    CallerIpAddress,\n    OperationNameValue,\n    ActivityStatusValue,\n    ResourceId,\n    ResourceGroup,\n    CorrelationId\n| order by TimeGenerated desc\n",
-    "queryFrequency": "PT2H",
+    "query": "\nAzureActivity\n| where TimeGenerated > ago(2h)\n| where OperationNameValue =~ \"MICROSOFT.AUTHORIZATION/ROLEASSIGNMENTS/WRITE\"\n| where ActivityStatusValue in~ (\"Success\", \"Succeeded\")\n| summarize arg_max(TimeGenerated, *) by CorrelationId, ResourceId, Caller\n| project\n    TimeGenerated,\n    Caller,\n    CallerIpAddress,\n    OperationNameValue,\n    ActivityStatusValue,\n    ResourceId,\n    ResourceGroup,\n    CorrelationId\n| order by TimeGenerated desc\n",
+    "queryFrequency": "PT1H",
     "queryPeriod": "PT2H",
     "triggerOperator": "GreaterThan",
     "triggerThreshold": 0,
     "suppressionEnabled": false,
-    "suppressionDuration": "PT1H",
+    "suppressionDuration": "PT5H",
     "tactics": [],
     "techniques": [],
     "entityMappings": [
+      {
+        "entityType": "Account",
+        "fieldMappings": [
+          {
+            "identifier": "FullName",
+            "columnName": "Caller"
+          }
+        ]
+      },
       {
         "entityType": "IP",
         "fieldMappings": [
           {
             "identifier": "Address",
             "columnName": "CallerIpAddress"
+          }
+        ]
+      },
+      {
+        "entityType": "AzureResource",
+        "fieldMappings": [
+          {
+            "identifier": "ResourceId",
+            "columnName": "ResourceId"
           }
         ]
       }

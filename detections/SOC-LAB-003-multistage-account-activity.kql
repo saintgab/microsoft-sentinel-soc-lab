@@ -1,0 +1,37 @@
+// SOC-LAB-003: Multi-stage suspicious account activity
+// Lab-only synthetic event correlation.
+// Detects ordered activity within a 30-minute window.
+
+SOCSecurityEvents_CL
+| where TimeGenerated > ago(1h)
+| summarize
+    FailedLoginTime = minif(TimeGenerated, EventType == "FailedLogin"),
+    LoginTime = minif(TimeGenerated, EventType == "SuccessfulLogin" and Result == "Success"),
+    PrivilegeTime = minif(TimeGenerated, EventType == "PrivilegeChange" and Result == "Success"),
+    FileAccessTime = minif(TimeGenerated, EventType == "SensitiveFileAccess" and Result == "Success"),
+    TransferTime = minif(TimeGenerated, EventType == "DataTransfer" and Result == "Success"),
+    EventCount = count(),
+    MaxRiskScore = max(RiskScore)
+    by CorrelationId, UserId, SourceIP
+| where isnotnull(FailedLoginTime)
+    and isnotnull(LoginTime)
+    and isnotnull(PrivilegeTime)
+    and isnotnull(FileAccessTime)
+    and isnotnull(TransferTime)
+| where FailedLoginTime < LoginTime
+    and LoginTime < PrivilegeTime
+    and PrivilegeTime < FileAccessTime
+    and FileAccessTime < TransferTime
+| where TransferTime - FailedLoginTime <= 30m
+| project
+    TimeGenerated = TransferTime,
+    UserId,
+    SourceIP,
+    CorrelationId,
+    FailedLoginTime,
+    LoginTime,
+    PrivilegeTime,
+    FileAccessTime,
+    TransferTime,
+    EventCount,
+    MaxRiskScore

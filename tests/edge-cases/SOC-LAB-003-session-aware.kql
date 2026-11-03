@@ -1,0 +1,42 @@
+datatable(Scenario:string, SessionId:string, OffsetMinutes:int, EventType:string, Result:string)
+[
+    "ValidSequence", "session-A", 0, "FailedLogin", "Failure",
+    "ValidSequence", "session-A", 5, "SuccessfulLogin", "Success",
+    "ValidSequence", "session-A", 10, "PrivilegeChange", "Success",
+    "ValidSequence", "session-A", 15, "SensitiveFileAccess", "Success",
+    "ValidSequence", "session-A", 20, "DataTransfer", "Success",
+
+    "MixedSessions", "session-A", 0, "FailedLogin", "Failure",
+    "MixedSessions", "session-A", 5, "SuccessfulLogin", "Success",
+    "MixedSessions", "session-B", 10, "PrivilegeChange", "Success",
+    "MixedSessions", "session-B", 15, "SensitiveFileAccess", "Success",
+    "MixedSessions", "session-B", 20, "DataTransfer", "Success"
+]
+| extend TimeGenerated = now() - 45m + OffsetMinutes * 1m
+| summarize
+    FailedLoginTime = minif(TimeGenerated, EventType == "FailedLogin"),
+    LoginTime = minif(TimeGenerated, EventType == "SuccessfulLogin" and Result == "Success"),
+    PrivilegeTime = minif(TimeGenerated, EventType == "PrivilegeChange" and Result == "Success"),
+    FileAccessTime = minif(TimeGenerated, EventType == "SensitiveFileAccess" and Result == "Success"),
+    TransferTime = minif(TimeGenerated, EventType == "DataTransfer" and Result == "Success")
+    by Scenario, SessionId
+| extend SessionMatch =
+    isnotnull(FailedLoginTime)
+    and isnotnull(LoginTime)
+    and isnotnull(PrivilegeTime)
+    and isnotnull(FileAccessTime)
+    and isnotnull(TransferTime)
+    and FailedLoginTime < LoginTime
+    and LoginTime < PrivilegeTime
+    and PrivilegeTime < FileAccessTime
+    and FileAccessTime < TransferTime
+    and TransferTime - FailedLoginTime <= 30m
+| summarize
+    SessionCount = count(),
+    MatchingSessions = countif(SessionMatch)
+    by Scenario
+| extend ActualMatch = MatchingSessions > 0
+| extend ExpectedMatch = Scenario == "ValidSequence"
+| extend TestResult = iff(ActualMatch == ExpectedMatch, "PASS", "FAIL")
+| project Scenario, SessionCount, MatchingSessions, ExpectedMatch, ActualMatch, TestResult
+| order by Scenario asc

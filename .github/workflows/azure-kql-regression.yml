@@ -1,0 +1,44 @@
+name: Azure KQL Regression Tests
+
+on:
+  push:
+    branches:
+      - feature/sentinel-arm-deployment
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  azure-kql-regression:
+    name: Execute KQL Regression Tests
+    if: github.ref == 'refs/heads/feature/sentinel-arm-deployment'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Validate KQL test fixtures
+        run: python scripts/validate_kql_fixtures.py
+
+      - name: Authenticate to Azure using OIDC
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Execute all nine Azure KQL regression tests
+        env:
+          AZURE_LOG_ANALYTICS_WORKSPACE_ID: 8447e5c8-33ea-45d0-a070-d8a562ed1aea
+        run: python scripts/run_kql_regression.py

@@ -33,3 +33,21 @@ jobs:
 
       - name: Validate Sentinel detections
         run: python scripts/validate_dac.py
+
+      - name: Validate ARM JSON syntax
+        run: |
+          for file in arm/*.json ingestion/dcr-*.json; do
+            python -m json.tool "$file" > /dev/null
+          done
+
+      - name: Check ingestion Python syntax
+        run: python -m py_compile ingestion/scripts/send_test_events.py
+
+      - name: Validate ingestion configuration and regression fixture
+        run: python scripts/validate_ingestion.py
+
+      - name: Validate all KQL test fixtures
+        run: python scripts/validate_kql_fixtures.py
+
+      - name: Validate ARM security and source consistency
+        run: python scripts/validate_arm.py
