@@ -144,3 +144,16 @@ These are local Detection-as-Code rule definitions, not yet complete deployable 
 The CI pipeline performs offline validation. It does not deploy analytics rules to Azure or verify live Sentinel alert generation.
 
 The original Sentinel detection evidence remains documented separately.
+
+## Operations and validation documentation
+
+- [Architecture](docs/project-architecture.md)
+- [Operations runbook](docs/operations-runbook.md)
+- [Security review](docs/security-review.md)
+- [SOC-LAB-003 correlation findings](docs/SOC-LAB-003-correlation-validation.md)
+
+The lab includes static validation and an Azure-authenticated
+KQL regression workflow covering nine synthetic scenarios.
+
+The custom analytics rules remain disabled.
+The session-aware candidate has not been deployed.
