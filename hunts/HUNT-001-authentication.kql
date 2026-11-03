@@ -1,0 +1,15 @@
+SOCSecurityEvents_CL
+| where TimeGenerated > ago(30d)
+| where EventType in ("FailedLogin", "SuccessfulLogin")
+| summarize
+    FailedCount = countif(EventType == "FailedLogin"),
+    FirstFailure = minif(TimeGenerated, EventType == "FailedLogin"),
+    FirstSuccess = minif(TimeGenerated, EventType == "SuccessfulLogin" and Result == "Success")
+    by UserId, SourceIP, CorrelationId, Window = bin(TimeGenerated, 1h)
+| where FailedCount >= 1
+| where isnotnull(FirstSuccess)
+| where FirstFailure < FirstSuccess
+| where FirstSuccess - FirstFailure <= 30m
+| project FirstFailure, FirstSuccess, UserId, SourceIP,
+          CorrelationId, FailedCount
+| order by FirstSuccess desc

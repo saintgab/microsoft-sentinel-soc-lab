@@ -1,0 +1,15 @@
+SOCSecurityEvents_CL
+| where TimeGenerated > ago(30d)
+| where EventType in ("SensitiveFileAccess", "DataTransfer")
+| summarize
+    FileAccessTime = minif(TimeGenerated, EventType == "SensitiveFileAccess"),
+    TransferTime = minif(TimeGenerated, EventType == "DataTransfer"),
+    Destinations = make_set_if(Destination, EventType == "DataTransfer", 20),
+    HighestRisk = max(RiskScore)
+    by UserId, SourceIP, CorrelationId, Window = bin(TimeGenerated, 1h)
+| where isnotnull(FileAccessTime) and isnotnull(TransferTime)
+| where FileAccessTime < TransferTime
+| where TransferTime - FileAccessTime <= 30m
+| project UserId, SourceIP, CorrelationId, FileAccessTime,
+          TransferTime, Destinations, HighestRisk
+| order by TransferTime desc
