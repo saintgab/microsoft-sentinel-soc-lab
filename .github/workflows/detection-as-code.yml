@@ -46,5 +46,8 @@ jobs:
       - name: Validate ingestion configuration and regression fixture
         run: python scripts/validate_ingestion.py
 
+      - name: Validate all KQL test fixtures
+        run: python scripts/validate_kql_fixtures.py
+
       - name: Validate ARM security and source consistency
         run: python scripts/validate_arm.py
