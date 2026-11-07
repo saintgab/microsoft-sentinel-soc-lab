@@ -198,3 +198,61 @@ Matching events are lab investigation candidates, not confirmed attacks.
 ### GitHub Actions — Automated KQL Regression
 
 ![GitHub Actions — Automated KQL Regression](screenshots/ci/github-actions-success.png)
+
+---
+
+## Threat-Informed Detection & Adversary Validation
+
+This repository includes an adversary-validation module that tests
+security telemetry visibility against controlled MITRE ATT&CK scenarios.
+
+### ADV-001 — PowerShell Execution Telemetry Validation
+
+**MITRE ATT&CK:** T1059.001 — PowerShell
+
+ADV-001 demonstrates the end-to-end processing of a genuine Windows
+Security Event ID 4688 from an authorized Windows 11 lab endpoint.
+
+**Validated workflow:**
+
+1. Execute a benign PowerShell process on Windows 11.
+2. Capture Windows Security Event ID 4688.
+3. Export the original endpoint telemetry.
+4. Transform the evidence into the existing Azure DCR schema.
+5. Submit the record using the Azure Monitor Logs Ingestion API.
+6. Verify the record in Log Analytics using KQL.
+7. Execute positive and negative detection-validation tests.
+8. Validate Python detection logic through GitHub Actions.
+
+### Verified Results
+
+| Validation | Result |
+|---|---|
+| Windows Security Event ID 4688 | Captured |
+| Azure Monitor ingestion | HTTP 204 |
+| Sentinel KQL event retrieval | 1 matching record |
+| Positive KQL validation | PASS |
+| Negative KQL validation | PASS |
+| Python unit tests | 6/6 passed |
+| GitHub Actions CI | Passed |
+
+### Evidence
+
+![ADV-001 Sentinel ingestion](adversary-validation/evidence/screenshots/ADV-001-sentinel-ingestion.png)
+
+![ADV-001 KQL validation](adversary-validation/evidence/screenshots/ADV-001-kql-validation.png)
+
+### Technical Documentation
+
+- [ADV-001 validation report](adversary-validation/reports/ADV-001-validation-report.md)
+- [ADV-001 scenario specification](adversary-validation/scenarios/ADV-001-powershell.md)
+- [Sentinel KQL validation](adversary-validation/detections/ADV-001-sentinel.kql)
+- [Python detection logic](adversary-validation/detections/adv001_detector.py)
+- [Automated tests](adversary-validation/tests/test_adv001.py)
+
+**Scope and limitations:** The simulation was executed interactively
+because the endpoint's PowerShell execution policy blocked the saved
+script. Telemetry was forwarded manually through the Logs Ingestion API.
+The current detector matches a controlled test identifier; it is not
+a general-purpose malicious PowerShell detector. Continuous endpoint
+collection and Sentinel incident generation were not implemented.
