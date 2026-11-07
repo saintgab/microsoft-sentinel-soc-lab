@@ -7,3 +7,7 @@ __pycache__/
 # Local Azure configuration
 .env
 .env.*
+
+# Private endpoint evidence and ingestion payloads
+/adversary-validation/evidence/*.json
+/adversary-validation/ingestion/ADV-001-sentinel.json
