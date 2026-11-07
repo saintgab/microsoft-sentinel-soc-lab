@@ -1,24 +1,50 @@
-# Microsoft Sentinel SOC & Cloud Detection Engineering Lab
+# Microsoft Sentinel SOC Lab | Detection Engineering & Threat Validation
 
-A hands-on Azure security operations project demonstrating cloud security monitoring, KQL detection engineering, alert validation, and incident response using Microsoft Sentinel and Microsoft Defender.
+An evidence-backed security engineering lab built with **Microsoft Sentinel, Azure Monitor, KQL, Python, and GitHub Actions**.
 
-## Project Overview
+The project covers cloud activity monitoring, detection-as-code, adversary validation, threat hunting, and automated regression testing. It distinguishes real endpoint events and live alert validation from synthetic test scenarios.
 
-This lab implements an end-to-end security detection workflow:
+## Verified Engineering Results
 
-Azure Activity Logs → Log Analytics → Microsoft Sentinel → KQL Detection → Security Alert → Incident Investigation
+| Capability | Validated result | Evidence |
+|---|---|---|
+| **ADV-001 — PowerShell telemetry** | Genuine Windows Security Event 4688 manually forwarded through Azure Logs Ingestion API; HTTP 204; one record retrieved using KQL; positive and negative tests passed | [Validation report](adversary-validation/reports/ADV-001-validation-report.md) |
+| **SOC-LAB-001 — Azure resource deletion** | Authorized resource-deletion test generated a Sentinel alert and investigated incident | [Detection evidence](#detection-evidence--microsoft-sentinel) |
+| **SOC-LAB-002 — RBAC monitoring** | Real Azure Activity logs queried and synthetic KQL tested; live alert generation not verified | [Detection](detections/SOC-LAB-002-rbac-monitoring.kql) |
+| **SOC-LAB-003 — Multi-stage correlation** | Nine Azure-executed regression assertions passed using synthetic scenarios; session-correlation limitation identified | [Correlation findings](docs/SOC-LAB-003-correlation-validation.md) |
+| **Threat hunting — HUNT-001 to HUNT-003** | Three hunting queries executed in Log Analytics, returning six investigation candidates; no confirmed malicious incidents | [Hunting results](docs/threat-hunting-results.md) |
+| **Detection-as-Code and CI** | Automated validation, Azure KQL regression, and ADV-001 unit testing with GitHub Actions; six ADV-001 unit tests passed | [Workflows](.github/workflows/) |
+
+## Architecture and Validation Paths
+
+**Azure activity:** Azure Activity Logs → Log Analytics → KQL analytics → Sentinel alert and incident investigation (validated for SOC-LAB-001).
+
+**Endpoint validation:** Windows 11 → Security Event 4688 → manual JSON export → Azure Logs Ingestion API → `SOCSecurityEvents_CL` → KQL positive/negative tests (ADV-001).
+
+**Engineering validation:** Version-controlled rules and fixtures → Python checks → GitHub Actions → Azure-executed KQL regression where configured.
+
+These paths have different validation scopes; they are not presented as a single continuously operating production pipeline.
+
+## Start Here
+
+- [ADV-001: Genuine Windows endpoint validation](adversary-validation/reports/ADV-001-validation-report.md)
+- [SOC-LAB-003: Correlation accuracy and limitations](docs/SOC-LAB-003-correlation-validation.md)
+- [Threat hunting findings](docs/threat-hunting-results.md)
+- [Architecture](docs/project-architecture.md)
+- [Evidence index](EVIDENCE.md)
+
+## Validation Scope and Limitations
+
+- **ADV-001:** Manual collection and forwarding, not continuous endpoint monitoring. The detector recognizes a controlled lab identifier rather than general malicious PowerShell behavior. The saved `.ps1` was blocked by execution policy; the benign test was run interactively.
+- **SOC-LAB-001:** One authorized resource-deletion event produced a live alert and incident. This does not establish production detection coverage.
+- **SOC-LAB-002:** Live alert generation was not verified.
+- **SOC-LAB-003:** Nine synthetic Azure-executed assertions passed, but the original grouping can conflate independent sessions. The session-aware candidate was tested but not deployed.
+- **Threat hunts:** Six matching rows are investigation candidates, not confirmed attacks. Synthetic ingestion may account for the matches.
+- **Operations:** Custom analytics rules remain disabled. Automated production deployment, continuous endpoint collection, and general false-positive performance have not been established.
 
 ## Technologies
 
-- Microsoft Azure
-- Microsoft Sentinel
-- Microsoft Defender
-- Azure Activity Logs
-- Log Analytics
-- Kusto Query Language (KQL)
-- Azure RBAC
-- Azure Policy
-- Git and GitHub
+Microsoft Sentinel · Azure Monitor · Log Analytics · KQL · Azure Activity Logs · Microsoft Entra ID · Azure RBAC · Python · GitHub Actions · ARM templates
 
 ## Detection Engineering
 
@@ -82,12 +108,6 @@ Budget alerts and ingestion caps do not guarantee a maximum Azure bill.
 - Azure RBAC activity analysis
 - Microsoft Sentinel analytics rule configuration
 - Incident classification and resolution
-
-## Validation Limitations
-
-SOC-LAB-001 was validated using one authorized real-world lab event. SOC-LAB-002 passed synthetic query testing but was not validated through live alert generation.
-
-These detections are educational implementations and require additional tuning before production use.
 
 ## Disclaimer
 
