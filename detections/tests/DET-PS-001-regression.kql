@@ -29,7 +29,7 @@ let Observed =
         and Action == "ProcessCreated"
         and Destination endswith @"\powershell.exe"
         and isnotempty(CommandLine)
-        and CommandLine matches regex @"(?i)(^|\s)-(encodedcommand|enc|e)(\s|:)"
+        and CommandLine matches regex @"(?i)^\s*(?:\x22[^\x22]*\x22|'[^']*'|[^\s\x22']+)(?:\s+(?:\x22[^\x22]*\x22|'[^']*'|[^\s\x22']+))*?\s+[-–—―](?:encodedcommand|encodedcomman|encodedcomma|encodedcomm|encodedcom|encodedco|encodedc|encoded|encode|encod|enco|enc|ec|en|e)(\s|:|$)"
     )
     | summarize
         ObservedCount = count(),

@@ -13,7 +13,7 @@ The project covers cloud activity monitoring, detection-as-code, adversary valid
 | **SOC-LAB-002 — RBAC monitoring** | Real Azure Activity logs queried and synthetic KQL tested; live alert generation not verified | [Detection](detections/SOC-LAB-002-rbac-monitoring.kql) |
 | **SOC-LAB-003 — Multi-stage correlation** | Nine Azure-executed regression assertions passed using synthetic scenarios; session-correlation limitation identified | [Correlation findings](docs/SOC-LAB-003-correlation-validation.md) |
 | **Threat hunting — HUNT-001 to HUNT-003** | Three hunting queries executed in Log Analytics, returning six investigation candidates; no confirmed malicious incidents | [Hunting results](docs/threat-hunting-results.md) |
-| **Detection-as-Code and CI** | Automated validation, Azure KQL regression, and ADV-001 unit testing with GitHub Actions; 11 ADV-001 unit tests passed | [Workflows](.github/workflows/) |
+| **Detection-as-Code and CI** | Automated validation, Azure KQL regression, and ADV-001 unit testing with GitHub Actions; 21 ingestion and payload validation tests passed | [Workflows](.github/workflows/) |
 
 ## Architecture and Validation Paths
 
@@ -180,7 +180,7 @@ telemetry exported from a Windows 11 lab and ingested into Azure Log Analytics.
 | Encoded PowerShell positive event | 1 observed, 1 detected — PASS |
 | Benign `Get-Date` negative event | 1 observed, 0 detected — PASS |
 | Azure historical regression | 2/2 passed |
-| Python regression suite | 21/21 passed |
+| Python ingestion and payload validation tests | 21/21 passed |
 
 The detector evaluates PowerShell command-line behavior rather than relying
 on a hard-coded correlation marker.
@@ -191,7 +191,7 @@ on a hard-coded correlation marker.
 - [Azure regression KQL](detections/tests/DET-PS-001-regression.kql)
 - [Validation report](detections/reports/DET-PS-001-RESULTS.md)
 - [Windows event converter](adversary-validation/ingestion/convert_det_ps001.py)
-- [Automated validation tests](adversary-validation/tests/test_det_ps001.py)
+- [DET-PS-001 ingestion validation tests](adversary-validation/tests/test_det_ps001.py)
 
 **Scope:** The positive test used a harmless encoded PowerShell command.
 Detection of this execution technique does not establish malicious intent.

@@ -16,7 +16,7 @@ SOCSecurityEvents_CL
     tostring(Parsed.OriginalEvent.CommandLine)
 )
 | where isnotempty(CommandLine)
-| where CommandLine matches regex @"(?i)(^|\s)-(encodedcommand|enc|e)(\s|:)"
+| where CommandLine matches regex @"(?i)^\s*(?:\x22[^\x22]*\x22|'[^']*'|[^\s\x22']+)(?:\s+(?:\x22[^\x22]*\x22|'[^']*'|[^\s\x22']+))*?\s+[-–—―](?:encodedcommand|encodedcomman|encodedcomma|encodedcomm|encodedcom|encodedco|encodedc|encoded|encode|encod|enco|enc|ec|en|e)(\s|:|$)"
 | project
     TimeGenerated,
     CorrelationId,
