@@ -38,9 +38,47 @@ MITRE ATT&CK: T1059.001 — PowerShell.
 
 ## Automated validation
 
-- Python unit tests: 21 passed
+- Python ingestion and payload validation tests: 21 passed
 - Azure historical regression: 2 cases passed
 - Regression KQL: detections/tests/DET-PS-001-regression.kql
+
+## Expanded detection coverage
+
+The DET-PS-001 matching expression was extended to recognize additional
+encoded-command abbreviations and selected Unicode dash variants.
+
+### Validation results
+
+| Validation | Cases | Result |
+| --- | ---: | --- |
+| Python detection-pattern examples | 18 | PASS |
+| Azure synthetic command-line examples | 18 | PASS |
+| Azure full detection predicate scenarios | 6 | PASS |
+| Genuine Windows Event 4688 regression | 2 | PASS |
+| Python ingestion and payload validation | 21 | PASS |
+
+The 18 Python examples are grouped into two unittest methods, using
+subtests for the individual cases.
+
+The six Azure predicate scenarios test event type, process action,
+executable filtering, command-line matching, and negative controls.
+
+The two genuine Windows events establish that the revised detection
+continues to recognize the harmless encoded-command execution while
+excluding the benign Get-Date execution.
+
+### Coverage boundaries
+
+- Synthetic command-line matches do not establish that Windows PowerShell
+  accepts every abbreviation or Unicode dash variant.
+- Python regex checks do not replace Azure KQL execution.
+- The Python detection tests exercise executable filtering and the regex;
+  they do not reproduce every KQL predicate.
+- Quoted-command handling is heuristic, not a complete PowerShell parser.
+- Encoded-command execution is an investigative signal, not proof of
+  malicious behavior.
+- The additional synthetic cases were executed manually in Azure;
+  they are not yet part of the scheduled GitHub Actions regression.
 
 ## Interpretation
 
