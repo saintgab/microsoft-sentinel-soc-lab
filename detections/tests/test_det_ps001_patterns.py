@@ -1,7 +1,8 @@
 """Local regex regression tests for DET-PS-001.
 
 These tests evaluate the regex extracted from the actual KQL file.
-They do not replace Azure KQL execution or Windows parser testing.
+Python re and Azure KQL's RE2 are different regex engines.
+These tests do not replace Azure KQL execution or Windows parser testing.
 """
 
 import re
@@ -61,6 +62,8 @@ NEGATIVE_CASES = {
         'powershell.exe -Command "Write-Output \'-enc AAAA\'"'
     ),
     "noprofile": "powershell.exe -NoProfile",
+    # This cmd.exe event is excluded by Destination. A separately
+    # logged child powershell.exe event could still match DET-PS-001.
     "different_process": "cmd.exe /c powershell.exe -EncodedCommand AAAA",
 }
 

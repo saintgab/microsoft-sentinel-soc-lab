@@ -99,8 +99,10 @@ does not establish malicious intent.
 - The rule has not been demonstrated as an enabled Sentinel
   analytics rule generating incidents.
 - Raw Windows evidence files are intentionally excluded from GitHub.
-- Historical regression depends on the specified events remaining
-  available within Azure Log Analytics retention.
+- Historical regression uses fixed November 2026 event timestamps.
+  It will fail if those records expire under the configured retention
+  policy for SOCSecurityEvents_CL. Verify the table retention setting
+  before assigning an expiry date; do not assume a 30- or 90-day period.
 
 ## Next engineering opportunities
 
