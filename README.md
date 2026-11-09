@@ -159,11 +159,46 @@ After restoring the valid severity, the pipeline passed and the merge became ava
 
 ### Scope and limitations
 
-These are local Detection-as-Code rule definitions, not yet complete deployable Microsoft Sentinel ARM templates.
+The repository includes Detection-as-Code definitions and ARM templates for SOC-LAB-001 and SOC-LAB-002. Local validation does not establish successful Azure deployment or live alert generation.
 
 The CI pipeline performs offline validation. It does not deploy analytics rules to Azure or verify live Sentinel alert generation.
 
 The original Sentinel detection evidence remains documented separately.
+
+## DET-PS-001 — Encoded PowerShell Detection
+
+A behavior-based KQL detection for Windows PowerShell execution using
+the `-EncodedCommand` argument, mapped to MITRE ATT&CK T1059.001.
+
+The detection was validated using genuine Windows Security Event ID 4688
+telemetry exported from a Windows 11 lab and ingested into Azure Log Analytics.
+
+### Verified results
+
+| Validation | Result |
+| --- | --- |
+| Encoded PowerShell positive event | 1 observed, 1 detected — PASS |
+| Benign `Get-Date` negative event | 1 observed, 0 detected — PASS |
+| Azure historical regression | 2/2 passed |
+| Python regression suite | 21/21 passed |
+
+The detector evaluates PowerShell command-line behavior rather than relying
+on a hard-coded correlation marker.
+
+### Implementation and evidence
+
+- [Detection KQL](detections/DET-PS-001-encoded-powershell.kql)
+- [Azure regression KQL](detections/tests/DET-PS-001-regression.kql)
+- [Validation report](detections/reports/DET-PS-001-RESULTS.md)
+- [Windows event converter](adversary-validation/ingestion/convert_det_ps001.py)
+- [Automated validation tests](adversary-validation/tests/test_det_ps001.py)
+
+**Scope:** The positive test used a harmless encoded PowerShell command.
+Detection of this execution technique does not establish malicious intent.
+Production false-positive rates, continuous telemetry collection, and
+Sentinel analytics-rule incident generation have not been validated.
+
+---
 
 ## Operations and validation documentation
 
