@@ -1,0 +1,54 @@
+// DET-PS-001 historical Azure regression
+// Validates one encoded PowerShell execution and one benign control.
+// Historical sample window: November 8-9, 2026 UTC.
+// Correlation IDs select test fixtures, not detection matches.
+
+let Expected = datatable(CorrelationId:string, ExpectedDetected:long)
+[
+    "BENIGN-4688-95761", 0,
+    "DET-PS-001-4688-96538", 1
+];
+let Observed =
+    SOCSecurityEvents_CL
+    | where TimeGenerated between (
+        datetime(2026-11-08T00:00:00Z) ..
+        datetime(2026-11-10T00:00:00Z)
+    )
+    | where CorrelationId in (
+        "BENIGN-4688-95761",
+        "DET-PS-001-4688-96538"
+    )
+    | extend Parsed = parse_json(RawData)
+    | extend CommandLine = case(
+        isnotempty(tostring(Parsed.CommandLine)),
+        tostring(Parsed.CommandLine),
+        tostring(Parsed.OriginalEvent.CommandLine)
+    )
+    | extend DetectorMatched = (
+        EventType == "WindowsProcessCreation"
+        and Action == "ProcessCreated"
+        and Destination endswith @"\powershell.exe"
+        and isnotempty(CommandLine)
+        and CommandLine matches regex @"(?i)(^|\s)-(encodedcommand|enc|e)(\s|:)"
+    )
+    | summarize
+        ObservedCount = count(),
+        DetectedCount = countif(DetectorMatched)
+        by CorrelationId;
+Expected
+| join kind=leftouter Observed on CorrelationId
+| extend
+    ObservedCount = coalesce(ObservedCount, tolong(0)),
+    DetectedCount = coalesce(DetectedCount, tolong(0))
+| extend TestResult = iff(
+    ObservedCount == 1 and DetectedCount == ExpectedDetected,
+    "PASS",
+    "FAIL"
+)
+| project
+    CorrelationId,
+    ExpectedDetected,
+    ObservedCount,
+    DetectedCount,
+    TestResult
+| order by CorrelationId asc

@@ -53,6 +53,29 @@ def validate_payload(records):
         ):
             raise SystemExit("Benign event validation failed")
 
+    elif correlation == "DET-PS-001-4688-96538":
+        try:
+            raw = json.loads(record["RawData"])
+        except (TypeError, ValueError) as exc:
+            raise SystemExit("Invalid DET-PS-001 evidence JSON") from exc
+
+        if not isinstance(raw, dict):
+            raise SystemExit("DET-PS-001 evidence must be an object")
+
+        command = raw.get("CommandLine", "")
+
+        if not (
+            raw.get("OriginalEventId") == 4688
+            and raw.get("OriginalRecordId") == 96538
+            and raw.get("EvidenceOrigin") == "Windows Security Event Log"
+            and raw.get("SimulationType") == "HarmlessEncodedPowerShell"
+            and record["Destination"].lower().endswith("\\powershell.exe")
+            and isinstance(command, str)
+            and "-encodedcommand" in command.lower()
+            and record["RiskScore"] == 0
+        ):
+            raise SystemExit("DET-PS-001 event validation failed")
+
     elif not correlation.startswith("ADV-001-"):
         raise SystemExit("Unexpected correlation ID")
 

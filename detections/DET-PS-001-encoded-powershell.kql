@@ -1,0 +1,26 @@
+// DET-PS-001 — Encoded PowerShell execution
+// Hypothesis: PowerShell encoded-command execution may warrant investigation.
+// MITRE ATT&CK: T1059.001
+// Telemetry: manually ingested genuine Windows Event ID 4688 records.
+// Scope: this lab's SOCSecurityEvents_CL custom table.
+// Limitation: this detects an execution argument, not malicious intent.
+
+SOCSecurityEvents_CL
+| where EventType == "WindowsProcessCreation"
+| where Action == "ProcessCreated"
+| where Destination endswith @"\powershell.exe"
+| extend Parsed = parse_json(RawData)
+| extend CommandLine = case(
+    isnotempty(tostring(Parsed.CommandLine)),
+    tostring(Parsed.CommandLine),
+    tostring(Parsed.OriginalEvent.CommandLine)
+)
+| where isnotempty(CommandLine)
+| where CommandLine matches regex @"(?i)(^|\s)-(encodedcommand|enc|e)(\s|:)"
+| project
+    TimeGenerated,
+    CorrelationId,
+    Destination,
+    CommandLine,
+    DetectionId = "DET-PS-001",
+    Technique = "T1059.001"
