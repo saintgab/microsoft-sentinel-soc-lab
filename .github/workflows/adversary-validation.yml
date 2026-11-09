@@ -1,10 +1,9 @@
-name: Adversary Validation CI
+name: Security Validation CI
 
 on:
   push:
     branches:
       - main
-      - feature/adversary-validation-v1
   pull_request:
     branches:
       - main
@@ -13,8 +12,8 @@ permissions:
   contents: read
 
 jobs:
-  adv001-tests:
-    name: ADV-001 PowerShell Detection Tests
+  security-validation:
+    name: Ingestion and Detection Validation
     runs-on: ubuntu-latest
 
     steps:
@@ -28,13 +27,20 @@ jobs:
 
       - name: Validate Python syntax
         run: |
-          python -m py_compile \
-            adversary-validation/detections/adv001_detector.py \
-            adversary-validation/tests/test_adv001.py
+          python -m compileall -q \
+            adversary-validation \
+            detections/tests
 
-      - name: Run ADV-001 detection tests
+      - name: Run ingestion and payload validation tests
         run: |
           python -m unittest discover \
             -s adversary-validation/tests \
+            -p "test_*.py" \
+            -v
+
+      - name: Run DET-PS-001 detection-pattern tests
+        run: |
+          python -m unittest discover \
+            -s detections/tests \
             -p "test_*.py" \
             -v
