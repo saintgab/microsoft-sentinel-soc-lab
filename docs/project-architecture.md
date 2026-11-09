@@ -1,7 +1,7 @@
 # Microsoft Sentinel SOC Lab Architecture
 
 ## Telemetry pipeline
-Python test event generator
+Synthetic test generator or converted genuine Windows Event 4688 evidence
   -> Microsoft Entra authentication
   -> Azure Monitor Logs Ingestion API
   -> Data Collection Rule
@@ -41,3 +41,16 @@ not been deployed. The current custom table lacks SessionId.
 - Disabled custom analytics rules
 - Disabled incident creation
 - Version-controlled detection and validation code
+
+## Telemetry provenance
+
+The custom table contains controlled lab test events.
+
+DET-PS-001 positive and negative validation used genuine Windows
+Security Event 4688 records, manually exported, converted into
+the existing ingestion schema, and submitted using the Azure
+Monitor Logs Ingestion API.
+
+Other SOC-LAB-003 regression scenarios use synthetic fixtures.
+These sources are not interchangeable, and continuous production
+telemetry collection has not been demonstrated.
