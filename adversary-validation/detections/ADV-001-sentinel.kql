@@ -1,35 +1,56 @@
-// ADV-001 — Controlled PowerShell execution validation
-// MITRE ATT&CK: T1059.001
-// Source: SOCSecurityEvents_CL
-// Genuine Windows 4688 event forwarded through the Logs Ingestion API.
-// This is a lab-marker test, not a general malicious PowerShell detector.
+// ADV-001: Controlled PowerShell telemetry validation
+// MITRE ATT&CK: T1059.001 (PowerShell)
+// Source: genuine Windows Security Event 4688 records
+// Ingestion: manually forwarded through Azure Monitor Logs Ingestion API
+// This validates a lab-marker detector, not malicious PowerShell behavior.
 
-let LabEvents =
+let Evaluated =
     SOCSecurityEvents_CL
     | where TimeGenerated between (
-        datetime(2026-11-07T02:00:00Z) ..
-        datetime(2026-11-07T04:00:00Z)
-    );
-let Positive =
+        datetime(2026-11-07T00:00:00Z) ..
+        datetime(2026-11-10T00:00:00Z)
+    )
+    | where EventType == "WindowsProcessCreation"
+    | where Action == "ProcessCreated"
+    | where Destination endswith @"\powershell.exe"
+    | extend DetectorMatched =
+        CorrelationId == "ADV-001-20261106-205332";
+let PositiveObserved =
     toscalar(
-        LabEvents
-        | where EventType == "WindowsProcessCreation"
-        | where Action == "ProcessCreated"
-        | where Destination endswith @"\powershell.exe"
+        Evaluated
         | where CorrelationId == "ADV-001-20261106-205332"
         | count
     );
-let Negative =
+let PositiveDetected =
     toscalar(
-        LabEvents
-        | where EventType == "WindowsProcessCreation"
-        | where Action == "ProcessCreated"
-        | where Destination endswith @"\powershell.exe"
-        | where CorrelationId == "ADV-001-DOES-NOT-EXIST"
+        Evaluated
+        | where CorrelationId == "ADV-001-20261106-205332"
+        | where DetectorMatched
+        | count
+    );
+let BenignObserved =
+    toscalar(
+        Evaluated
+        | where CorrelationId == "BENIGN-4688-95761"
+        | count
+    );
+let BenignDetected =
+    toscalar(
+        Evaluated
+        | where CorrelationId == "BENIGN-4688-95761"
+        | where DetectorMatched
         | count
     );
 print
-    PositiveMatches = Positive,
-    NegativeMatches = Negative,
-    PositiveTest = iff(Positive >= 1, "PASS", "FAIL"),
-    NegativeTest = iff(Negative == 0, "PASS", "FAIL")
+    PositiveObserved,
+    PositiveDetected,
+    BenignObserved,
+    BenignDetected,
+    PositiveTest = iff(
+        PositiveObserved >= 1 and PositiveDetected >= 1,
+        "PASS", "FAIL"
+    ),
+    NegativeTest = iff(
+        BenignObserved >= 1 and BenignDetected == 0,
+        "PASS", "FAIL"
+    )

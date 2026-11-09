@@ -11,6 +11,54 @@ import uuid
 from pathlib import Path
 
 
+def validate_payload(records):
+
+    if not isinstance(records, list) or len(records) != 1:
+        raise SystemExit("Expected exactly one JSON event record")
+
+    record = records[0]
+
+    expected = {
+        "TimeGenerated", "EventType", "UserId", "SourceIP",
+        "Destination", "Action", "Result", "RiskScore",
+        "CorrelationId", "RawData",
+    }
+
+    if set(record) != expected:
+        raise SystemExit("Payload fields do not match DCR schema")
+
+    if record["EventType"] != "WindowsProcessCreation":
+        raise SystemExit("Unexpected event type")
+
+    if record["Action"] != "ProcessCreated":
+        raise SystemExit("Unexpected action")
+
+    correlation = str(record["CorrelationId"])
+
+    if correlation == "BENIGN-4688-95761":
+        try:
+            raw = json.loads(record["RawData"])
+        except (TypeError, ValueError) as exc:
+            raise SystemExit("Invalid benign evidence JSON") from exc
+
+        command = str(raw.get("CommandLine", ""))
+
+        if not (
+            raw.get("OriginalEventId") == 4688
+            and raw.get("OriginalRecordId") == 95761
+            and raw.get("EvidenceOrigin") == "Windows Security Event Log"
+            and record["Destination"].lower().endswith("\\powershell.exe")
+            and "get-date" in command.lower()
+            and "adv-001-" not in command.lower()
+        ):
+            raise SystemExit("Benign event validation failed")
+
+    elif not correlation.startswith("ADV-001-"):
+        raise SystemExit("Unexpected correlation ID")
+
+    return record
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("payload", type=Path)
@@ -51,29 +99,7 @@ def main():
         raise SystemExit("Invalid DCR immutable ID")
 
     records = json.loads(args.payload.read_text(encoding="utf-8-sig"))
-
-    if not isinstance(records, list) or len(records) != 1:
-        raise SystemExit("Expected exactly one JSON event record")
-
-    record = records[0]
-
-    expected = {
-        "TimeGenerated", "EventType", "UserId", "SourceIP",
-        "Destination", "Action", "Result", "RiskScore",
-        "CorrelationId", "RawData",
-    }
-
-    if set(record) != expected:
-        raise SystemExit("Payload fields do not match DCR schema")
-
-    if record["EventType"] != "WindowsProcessCreation":
-        raise SystemExit("Unexpected event type")
-
-    if record["Action"] != "ProcessCreated":
-        raise SystemExit("Unexpected action")
-
-    if not str(record["CorrelationId"]).startswith("ADV-001-"):
-        raise SystemExit("Unexpected correlation ID")
+    record = validate_payload(records)
 
     secret = getpass.getpass("Enter Azure client secret (hidden): ")
 

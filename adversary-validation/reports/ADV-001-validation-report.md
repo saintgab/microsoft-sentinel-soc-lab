@@ -110,3 +110,39 @@ telemetry through Microsoft Sentinel.
 Future enhancements should evaluate automated endpoint collection,
 more behavior-oriented PowerShell detections, and scheduled
 analytics-rule validation.
+
+## Additional Genuine Benign-Event Validation — November 8, 2026
+
+A second genuine Windows Security Event ID 4688 was collected from
+the Windows 11 lab endpoint.
+
+- Process: Windows PowerShell (`powershell.exe`)
+- Command: `-NoProfile -Command Get-Date`
+- Original event timestamp: `2026-11-08T22:29:52.0196024Z`
+- Windows Event Record ID: `95761`
+- Lab ingestion correlation ID: `BENIGN-4688-95761`
+- Collection method: manual XML export and Azure Logs Ingestion API
+- Source verification: original Windows XML inspected locally
+- Result verification: matching event retrieved from `SOCSecurityEvents_CL`
+
+### Azure KQL Results
+
+| Measurement | Verified result |
+|---|---:|
+| Positive event observed | 1 |
+| Positive event matched lab detector | 1 |
+| Benign event observed | 1 |
+| Benign event matched lab detector | 0 |
+| Positive test | PASS |
+| Negative test | PASS |
+
+The negative test requires the benign event to be present in the
+queried telemetry. A missing benign event causes the test to fail.
+
+The detection condition is specific to the controlled ADV-001 lab
+correlation marker. This exercise does not demonstrate reliable
+malicious PowerShell classification or establish a false-positive rate.
+
+The earlier negative test using `ADV-001-DOES-NOT-EXIST` has been
+superseded by the validation above. Original Windows XML and ingestion
+payloads remain private and are not committed to the repository.
