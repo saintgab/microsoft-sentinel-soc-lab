@@ -8,12 +8,12 @@ The project covers cloud activity monitoring, detection-as-code, adversary valid
 
 | Capability | Validated result | Evidence |
 |---|---|---|
-| **ADV-001 — PowerShell telemetry** | Genuine Windows Security Event 4688 manually forwarded through Azure Logs Ingestion API; HTTP 204; one record retrieved using KQL; positive and negative tests passed | [Validation report](adversary-validation/reports/ADV-001-validation-report.md) |
+| **ADV-001 — PowerShell telemetry** | Two genuine Windows Security Event 4688 records manually forwarded to Azure; marked positive event detected, benign Get-Date event observed but excluded by the lab-marker detector | [Validation report](adversary-validation/reports/ADV-001-validation-report.md) |
 | **SOC-LAB-001 — Azure resource deletion** | Authorized resource-deletion test generated a Sentinel alert and investigated incident | [Detection evidence](#detection-evidence--microsoft-sentinel) |
 | **SOC-LAB-002 — RBAC monitoring** | Real Azure Activity logs queried and synthetic KQL tested; live alert generation not verified | [Detection](detections/SOC-LAB-002-rbac-monitoring.kql) |
 | **SOC-LAB-003 — Multi-stage correlation** | Nine Azure-executed regression assertions passed using synthetic scenarios; session-correlation limitation identified | [Correlation findings](docs/SOC-LAB-003-correlation-validation.md) |
 | **Threat hunting — HUNT-001 to HUNT-003** | Three hunting queries executed in Log Analytics, returning six investigation candidates; no confirmed malicious incidents | [Hunting results](docs/threat-hunting-results.md) |
-| **Detection-as-Code and CI** | Automated validation, Azure KQL regression, and ADV-001 unit testing with GitHub Actions; six ADV-001 unit tests passed | [Workflows](.github/workflows/) |
+| **Detection-as-Code and CI** | Automated validation, Azure KQL regression, and ADV-001 unit testing with GitHub Actions; 11 ADV-001 unit tests passed | [Workflows](.github/workflows/) |
 
 ## Architecture and Validation Paths
 
